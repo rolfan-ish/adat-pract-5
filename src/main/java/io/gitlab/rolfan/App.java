@@ -2,14 +2,19 @@ package io.gitlab.rolfan;
 
 import com.db4o.Db4oEmbedded;
 import com.db4o.ObjectContainer;
+import com.db4o.query.Predicate;
+import io.gitlab.rolfan.arg.MedallaArg;
 import io.gitlab.rolfan.arg.TemporadaArg;
 import io.gitlab.rolfan.jmenu.Entry;
 import io.gitlab.rolfan.jmenu.Menu;
 import io.gitlab.rolfan.jmenu.arg.Arg;
 import io.gitlab.rolfan.jmenu.arg.IntArg;
-import io.gitlab.rolfan.model.Deporte;
-import io.gitlab.rolfan.model.Evento;
-import io.gitlab.rolfan.model.Olimpiada;
+import io.gitlab.rolfan.jmenu.arg.StringArg;
+import io.gitlab.rolfan.model.*;
+
+import java.util.List;
+
+import static io.gitlab.rolfan.util.ListUtil.*;
 
 public class App {
     private final ObjectContainer db;
@@ -30,29 +35,21 @@ public class App {
         var olim = new Olimpiada();
         try {
             olim.temporada = temporada.get();
-            if (olim.temporada == null) throw new Exception();
         } catch (Exception e) {
             System.err.println("Valor invalido");
             return;
         }
 
-        db.queryByExample(olim)
-                .stream()
-                .map(r -> (Olimpiada)r)
-                .forEach(r -> System.out.printf("%d: %s %s\n", r.anio, r.nombre, r.ciudad));
-
+        List<Olimpiada> olims = db.queryByExample(olim);
+        forEachIndexed(olims, (i, o) -> System.out.printf("%d: %s\n", i, o.nombre));
         try {
-            olim.anio = codigoOlim.get();
-            olim = (Olimpiada) db.queryByExample(olim).getFirst();
-            if (olim == null) throw new Exception();
+            olim = olims.get(codigoOlim.get());
         } catch (Exception e) {
             System.err.println("Valor invalido");
             return;
         }
 
-        for (int i = 0; i < olim.deportes.size(); i++) {
-            System.out.printf("%d: %s\n", i, olim.deportes.get(i).nombre);
-        }
+        forEachIndexed(olim.deportes, (i, e) -> System.out.printf("%d: %s\n", i, e.nombre));
         Deporte depor;
         try {
             depor = olim.deportes.get(codigoDepor.get());
@@ -61,9 +58,7 @@ public class App {
             return;
         }
 
-        for (int i = 0; i < depor.eventos.size(); i++) {
-            System.out.printf("%d: %s\n", i, depor.eventos.get(i).nombre);
-        }
+        forEachIndexed(depor.eventos, (i, p) -> System.out.printf("%d: %s\n", i, p.nombre));
         Evento evento;
         try {
             evento = depor.eventos.get(codigoEven.get());
@@ -76,12 +71,60 @@ public class App {
         System.out.println("Edición olímpica: " + olim.nombre);
         System.out.println("Deporte: " + depor.nombre);
         System.out.println("Evento: " + evento.nombre);
-        evento.deportistas.forEach(d -> {
+        evento.participaciones.forEach(d -> {
             System.out.println("Deportista:");
-            System.out.println("\tNombre: " + d.nombre);
-            System.out.println("\tAltura: " + d.altura);
-            System.out.println("\tPeso: " + d.peso);
+            System.out.println("\tNombre: " + d.deportista.nombre);
+            System.out.println("\tAltura: " + d.deportista.altura);
+            System.out.println("\tPeso: " + d.deportista.peso);
+            System.out.println("\tEdad: " + d.edad);
             System.out.println("\tMedalla: " + d.medalla);
         });
+    }
+
+    @Entry(key = "2", desc = "Modificar medalla deportista", pos = 2)
+    public void modificarMedalla(@Arg("Introduce el texto de busqueda:") StringArg textoBusqueda,
+                                 @Arg("Introduce el código del deportista:") IntArg codigoDeportista,
+                                 @Arg("Introduce el código del evento:") IntArg codigoEvento,
+                                 @Arg("Introduce la nueva medalla (oro, plata, bronze, null):") MedallaArg medalla) {
+        String busqueda;
+        try {
+            busqueda = textoBusqueda.get();
+        } catch (Exception e) {
+            System.err.println("Valor invalido");
+            return;
+        }
+        var deportistas = db.query(new Predicate<Deportista>() {
+            @Override
+            public boolean match(Deportista o) {
+                return o.nombre.contains(busqueda);
+            }
+        });
+
+        forEachIndexed(deportistas, (i, d) -> System.out.printf("%d: %s\n", i, d.nombre));
+        Deportista deportista;
+        try {
+            deportista = deportistas.get(codigoDeportista.get());
+        } catch (Exception e) {
+            System.err.println("Valor invalido");
+            return;
+        }
+
+        forEachIndexed(deportista.participaciones, (i, p) -> System.out.printf("%d: %s\n", i, p.evento.nombre));
+        Participacion participacion;
+        try {
+            participacion = deportista.participaciones.get(codigoEvento.get());
+        } catch (Exception e) {
+            System.err.println("Valor invalido");
+            return;
+        }
+
+        try {
+            participacion.medalla = medalla.get();
+        } catch (Exception e) {
+            System.err.println("Valor invalido");
+            return;
+        }
+        db.store(participacion);
+        db.commit();
     }
 }

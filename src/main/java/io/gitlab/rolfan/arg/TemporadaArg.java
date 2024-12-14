@@ -1,11 +1,11 @@
 package io.gitlab.rolfan.arg;
 
 import io.gitlab.rolfan.jmenu.arg.ArgGetter;
-import io.gitlab.rolfan.model.Olimpiada;
+import io.gitlab.rolfan.model.Olimpiada.Temporada;
 
 import java.util.Scanner;
 
-public class TemporadaArg extends ArgGetter<Olimpiada.Temporada> {
+public class TemporadaArg extends ArgGetter<Temporada> {
     /**
      * Mandatory constructor for ALL subclasses of ArgGetter
      *
@@ -16,12 +16,12 @@ public class TemporadaArg extends ArgGetter<Olimpiada.Temporada> {
     }
 
     @Override
-    protected Olimpiada.Temporada getObject() {
+    protected Temporada getObject() throws Exception {
         var s = new Scanner(System.in).next().toLowerCase();
         if ("winter".startsWith(s))
-            return Olimpiada.Temporada.INVIERNO;
+            return Temporada.INVIERNO;
         if ("summer".startsWith(s))
-            return Olimpiada.Temporada.VERANO;
-        return null;
+            return Temporada.VERANO;
+        throw new Exception();
     }
 }
