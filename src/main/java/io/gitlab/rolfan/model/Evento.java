@@ -12,6 +12,6 @@ public class Evento {
         this.nombre = nombre;
         this.olimpiada = olimpiada;
         this.deporte = deporte;
-        this.participaciones = new ArrayList<>(); // Initialize the list
+        this.participaciones = new ArrayList<>();
     }
 }

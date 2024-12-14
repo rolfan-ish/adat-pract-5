@@ -27,35 +27,10 @@ public class App {
         new Menu(new App(Db4oEmbedded.openFile("db.db4o"))).runMenuForever();
     }
 
-    @Entry(key = "1", desc = "Listado de deportistas participantes", pos = 1)
-    public void listado(@Arg("Introduce la temporada:") TemporadaArg temporada,
-                        @Arg("Introduce el código de la edición olímpica:") IntArg codigoOlim,
-                        @Arg("Introduce el código del deporte:") IntArg codigoDepor,
-                        @Arg("Introduce el código del evento:") IntArg codigoEven) {
-        var evento = buscarEvento(temporada, codigoOlim, codigoDepor, codigoEven);
-        if (evento == null) {
-            System.err.println("Valor invalido");
-            return;
-        }
-
-        System.out.println("Temporada: " + evento.olimpiada.temporada);
-        System.out.println("Edición olímpica: " + evento.olimpiada.nombre);
-        System.out.println("Deporte: " + evento.deporte.nombre);
-        System.out.println("Evento: " + evento.nombre);
-        evento.participaciones.forEach(d -> {
-            System.out.println("Deportista:");
-            System.out.println("\tNombre: " + d.deportista.nombre);
-            System.out.println("\tAltura: " + d.deportista.altura);
-            System.out.println("\tPeso: " + d.deportista.peso);
-            System.out.println("\tEdad: " + d.edad);
-            System.out.println("\tMedalla: " + d.medalla);
-        });
-    }
-
     public Evento buscarEvento(TemporadaArg temporada, IntArg codigoOlim, IntArg codigoDepor, IntArg codigoEven) {
-        var olim = new Olimpiada();
+        Olimpiada olim;
         try {
-            olim.temporada = temporada.get();
+            olim = new Olimpiada(temporada.get());
         } catch (Exception e) {
             return null;
         }
@@ -90,7 +65,7 @@ public class App {
         } catch (Exception e) {
             return null;
         }
-        return db.query(new Predicate<Deportista>() {
+        return db.query(new Predicate<>() {
             @Override
             public boolean match(Deportista o) {
                 return o.nombre.equals(busqueda);
@@ -116,7 +91,6 @@ public class App {
             return null;
 
         forEachIndexed(deportista.participaciones, (i, p) -> System.out.printf("%d: %s\n", i, p.evento.nombre));
-        Participacion participacion;
         try {
             return deportista.participaciones.get(codigoParticipacion.get());
         } catch (Exception e) {
@@ -124,6 +98,44 @@ public class App {
         }
     }
 
+
+    /**
+     * @param temporada Temporada de las ediciones olímpicas a buscar
+     * @param codigoOlim Índice de la edición olímpica de los resultados encontrados
+     * @param codigoDepor Índice del deporte de los deportes de la edición seleccionada
+     * @param codigoEven Índice del evento del deporte seleccionado
+     */
+    @Entry(key = "1", desc = "Listado de deportistas participantes", pos = 1)
+    public void listado(@Arg("Introduce la temporada:") TemporadaArg temporada,
+                        @Arg("Introduce el código de la edición olímpica:") IntArg codigoOlim,
+                        @Arg("Introduce el código del deporte:") IntArg codigoDepor,
+                        @Arg("Introduce el código del evento:") IntArg codigoEven) {
+        var evento = buscarEvento(temporada, codigoOlim, codigoDepor, codigoEven);
+        if (evento == null) {
+            System.err.println("Valor invalido");
+            return;
+        }
+
+        System.out.println("Temporada: " + evento.olimpiada.temporada);
+        System.out.println("Edición olímpica: " + evento.olimpiada.nombre);
+        System.out.println("Deporte: " + evento.deporte.nombre);
+        System.out.println("Evento: " + evento.nombre);
+        evento.participaciones.forEach(d -> {
+            System.out.println("Deportista:");
+            System.out.println("\tNombre: " + d.deportista.nombre);
+            System.out.println("\tAltura: " + d.deportista.altura);
+            System.out.println("\tPeso: " + d.deportista.peso);
+            System.out.println("\tEdad: " + d.edad);
+            System.out.println("\tMedalla: " + d.medalla);
+        });
+    }
+
+    /**
+     * @param textoBusqueda Texto con el que localizar al deportista
+     * @param codigoDeportista Índice del deportista de los resultados obtenidos
+     * @param codigoParticipacion Índice de la participación de las participaciones del deportista seleccionado
+     * @param medalla Valor de la nueva medalla
+     */
     @Entry(key = "2", desc = "Modificar medalla deportista", pos = 2)
     public void modificarMedalla(@Arg("Introduce el texto de búsqueda:") StringArg textoBusqueda,
                                  @Arg("Introduce el código del deportista:") IntArg codigoDeportista,
@@ -144,6 +156,15 @@ public class App {
         db.commit();
     }
 
+    /**
+     * @param textoBusqueda Texto con el que localizar al deportista
+     * @param nombreDeportista Nombre del deportista en caso de que se tenga que crear
+     * @param codigoDeportista Índice del deportista de los resultados obtenidos
+     * @param temporada Temporada de las ediciones olímpicas a buscar
+     * @param codigoOlim Índice de la edición olímpica de los resultados encontrados
+     * @param codigoDeporte Índice del deporte de los deportes de la edición seleccionada
+     * @param codigoEvento Índice del evento del deporte seleccionado
+     */
     @Entry(key = "3", desc = "Añadir deportista/participación", pos = 3)
     public void aniadirDeportista(@Arg("Introduce el texto de búsqueda:") StringArg textoBusqueda,
                                   @Arg("Introduce el nombre del nuevo deportista:") StringArg nombreDeportista,
@@ -153,11 +174,13 @@ public class App {
                                   @Arg("Introduce el código del deporte:") IntArg codigoDeporte,
                                   @Arg("Introduce el código del evento:") IntArg codigoEvento) {
         var deportistas = buscarDeportistas(textoBusqueda);
+        var creado = false;
         Deportista deportista;
         if (deportistas == null) {
             try {
                 deportista = new Deportista(nombreDeportista.get());
-                db.store(deportista);
+
+                creado = true;
             } catch (Exception e) {
                 deportista = null;
             }
@@ -174,11 +197,23 @@ public class App {
             System.err.println("Valor invalido");
             return;
         }
+        var part = new Participacion(0, null, evento, deportista, null);
+        if (creado) {
+            deportista.participaciones.add(part);
+            db.store(deportista);
+        }
+        evento.participaciones.add(part);
 
-        db.store(new Participacion(0, null, evento, deportista, null));
+        db.store(evento);
+        db.store(part);
         db.commit();
     }
 
+    /**
+     * @param textoBusqueda Texto con el que localizar al deportista
+     * @param codigoDeportista Índice del deportista de los resultados obtenidos
+     * @param codigoParticipacion Índice de la participación de las participaciones del deportista seleccionado
+     */
     @Entry(key = "4", desc = "Eliminar participación", pos = 4)
     public void eliminarParticipacion(@Arg("Introduce el texto de búsqueda:") StringArg textoBusqueda,
                                       @Arg("Introduce el código del deportista:") IntArg codigoDeportista,
