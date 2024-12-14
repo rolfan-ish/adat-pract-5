@@ -68,7 +68,7 @@ public class App {
         return db.query(new Predicate<>() {
             @Override
             public boolean match(Deportista o) {
-                return o.nombre.equals(busqueda);
+                return o.nombre.contains(busqueda);
             }
         });
     }
@@ -106,13 +106,13 @@ public class App {
      * @param codigoEven Índice del evento del deporte seleccionado
      */
     @Entry(key = "1", desc = "Listado de deportistas participantes", pos = 1)
-    public void listado(@Arg("Introduce la temporada:") TemporadaArg temporada,
+    public void listado(@Arg("Introduce la temporada (winter/summer):") TemporadaArg temporada,
                         @Arg("Introduce el código de la edición olímpica:") IntArg codigoOlim,
                         @Arg("Introduce el código del deporte:") IntArg codigoDepor,
                         @Arg("Introduce el código del evento:") IntArg codigoEven) {
         var evento = buscarEvento(temporada, codigoOlim, codigoDepor, codigoEven);
         if (evento == null) {
-            System.err.println("Valor invalido");
+            System.out.println("Valor invalido");
             return;
         }
 
@@ -143,13 +143,13 @@ public class App {
                                  @Arg("Introduce la nueva medalla (oro, plata, bronze, null):") MedallaArg medalla) {
         var participacion = buscarParticipacion(textoBusqueda, codigoDeportista, codigoParticipacion);
         if (participacion == null) {
-            System.err.println("Valor invalido");
+            System.out.println("Valor invalido");
             return;
         }
         try {
             participacion.medalla = medalla.get();
         } catch (Exception e) {
-            System.err.println("Valor invalido");
+            System.out.println("Valor invalido");
             return;
         }
         db.store(participacion);
@@ -169,17 +169,16 @@ public class App {
     public void aniadirDeportista(@Arg("Introduce el texto de búsqueda:") StringArg textoBusqueda,
                                   @Arg("Introduce el nombre del nuevo deportista:") StringArg nombreDeportista,
                                   @Arg("Introduce el código del deportista:") IntArg codigoDeportista,
-                                  @Arg("Introduce la temporada:") TemporadaArg temporada,
+                                  @Arg("Introduce la temporada (winter/summer):") TemporadaArg temporada,
                                   @Arg("Introduce el código de la olimpiada:") IntArg codigoOlim,
                                   @Arg("Introduce el código del deporte:") IntArg codigoDeporte,
                                   @Arg("Introduce el código del evento:") IntArg codigoEvento) {
         var deportistas = buscarDeportistas(textoBusqueda);
         var creado = false;
         Deportista deportista;
-        if (deportistas == null) {
+        if (deportistas.isEmpty()) {
             try {
                 deportista = new Deportista(nombreDeportista.get());
-
                 creado = true;
             } catch (Exception e) {
                 deportista = null;
@@ -188,13 +187,13 @@ public class App {
             deportista = buscarDeportista(deportistas, codigoDeportista);
         }
         if (deportista == null) {
-            System.err.println("Valor invalido");
+            System.out.println("Valor invalido");
             return;
         }
 
         var evento = buscarEvento(temporada, codigoOlim, codigoDeporte, codigoEvento);
         if (evento == null) {
-            System.err.println("Valor invalido");
+            System.out.println("Valor invalido");
             return;
         }
         var part = new Participacion(0, null, evento, deportista, null);
@@ -220,16 +219,45 @@ public class App {
                                       @Arg("Introduce el código de la participación:") IntArg codigoParticipacion) {
         var participacion = buscarParticipacion(textoBusqueda, codigoDeportista, codigoParticipacion);
         if (participacion == null) {
-            System.err.println("Valor invalido");
+            System.out.println("Valor invalido");
             return;
         }
-        db.delete(participacion);
         participacion.deportista.participaciones.remove(participacion);
+        participacion.evento.participaciones.remove(participacion);
+        participacion.equipo.participaciones.remove(participacion);
         if (participacion.deportista.participaciones.isEmpty()) {
             db.delete(participacion.deportista);
         } else {
             db.store(participacion.deportista);
         }
+        db.delete(participacion);
+        db.commit();
+    }
+
+    @Entry(key = "5", desc = "Crear datos de prueba", pos = 5)
+    public void crearDatosPrueba() {
+        var olimpiada = new Olimpiada("Tokyo 2020", 2020, Olimpiada.VERANO, "Tokyo");
+        var atletismo = new Deporte("Atletismo");
+        var evento100m = new Evento("100m", olimpiada, atletismo);
+
+        var deportista = new Deportista("Usain Bolt", "M", 94, 195);
+        var equipo = new Equipo("Jamaica", "JAM");
+        var participacion = new Participacion(34, Participacion.ORO, evento100m, deportista, equipo);
+
+        evento100m.participaciones.add(participacion);
+        deportista.participaciones.add(participacion);
+        equipo.participaciones.add(participacion);
+
+        atletismo.eventos.add(evento100m);
+        olimpiada.deportes.add(atletismo);
+
+        db.store(olimpiada);
+        db.store(atletismo);
+        db.store(evento100m);
+        db.store(deportista);
+        db.store(equipo);
+        db.store(participacion);
+
         db.commit();
     }
 

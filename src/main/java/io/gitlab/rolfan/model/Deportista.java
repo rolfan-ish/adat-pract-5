@@ -19,5 +19,6 @@ public class Deportista {
 
     public Deportista(String nombre) {
         this.nombre = nombre;
+        this.participaciones = new ArrayList<>();
     }
 }

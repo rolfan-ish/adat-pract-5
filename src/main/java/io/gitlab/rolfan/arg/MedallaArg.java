@@ -1,11 +1,11 @@
 package io.gitlab.rolfan.arg;
 
 import io.gitlab.rolfan.jmenu.arg.ArgGetter;
-import io.gitlab.rolfan.model.Participacion.Medalla;
+import io.gitlab.rolfan.model.Participacion;
 
 import java.util.Scanner;
 
-public class MedallaArg extends ArgGetter<Medalla> {
+public class MedallaArg extends ArgGetter<String> {
 
     /**
      * Mandatory constructor for ALL subclasses of ArgGetter
@@ -17,14 +17,14 @@ public class MedallaArg extends ArgGetter<Medalla> {
     }
 
     @Override
-    protected Medalla getObject() throws Exception {
+    protected String getObject() throws Exception {
         var s = new Scanner(System.in).nextLine().toLowerCase();
         if ("oro".startsWith(s))
-            return Medalla.ORO;
+            return Participacion.ORO;
         if ("bronze".startsWith(s))
-            return Medalla.BRONCE;
+            return Participacion.BRONCE;
         if ("plata".startsWith(s))
-            return Medalla.PLATA;
+            return Participacion.PLATA;
         if ("null".startsWith(s))
             return null;
         throw new Exception();

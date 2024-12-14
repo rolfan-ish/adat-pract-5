@@ -2,12 +2,12 @@ package io.gitlab.rolfan.model;
 
 public class Participacion {
     public int edad;
-    public Medalla medalla;
+    public String medalla;
     public Evento evento;
     public Deportista deportista;
     public Equipo equipo;
 
-    public Participacion(int edad, Medalla medalla, Evento evento, Deportista deportista, Equipo equipo) {
+    public Participacion(int edad, String medalla, Evento evento, Deportista deportista, Equipo equipo) {
         this.edad = edad;
         this.medalla = medalla;
         this.evento = evento;
@@ -15,7 +15,7 @@ public class Participacion {
         this.equipo = equipo;
     }
 
-    public enum Medalla {
-        ORO, PLATA, BRONCE
-    }
+    public static final String ORO = "oro";
+    public static final String PLATA = "plata";
+    public static final String BRONCE = "bronce";
 }

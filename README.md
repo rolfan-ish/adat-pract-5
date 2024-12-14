@@ -24,10 +24,8 @@ mvn compile
 mvn exec:java
 ```
 
-## Test
-```shell
-mvn test
-```
+## Base de datos
+La opción 5 del menú crea información para hacer pruebas.
 
 ## Autor
 Aimar Ibarra

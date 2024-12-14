@@ -6,11 +6,11 @@ import java.util.ArrayList;
 public class Olimpiada {
     public String nombre;
     public int anio;
-    public Temporada temporada;
+    public String temporada;
     public String ciudad;
     public ArrayList<Deporte> deportes;
 
-    public Olimpiada(String nombre, int anio, Temporada temporada, String ciudad) {
+    public Olimpiada(String nombre, int anio, String temporada, String ciudad) {
         this.nombre = nombre;
         this.anio = anio;
         this.temporada = temporada;
@@ -18,12 +18,10 @@ public class Olimpiada {
         this.deportes = new ArrayList<>();
     }
 
-    public Olimpiada(Temporada temporada) {
+    public Olimpiada(String temporada) {
         this.temporada = temporada;
     }
 
-    public enum Temporada {
-        INVIERNO,
-        VERANO
-    }
+    public static final String VERANO = "verano";
+    public static final String INVIERNO = "invierno";
 }
