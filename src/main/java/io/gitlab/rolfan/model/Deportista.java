@@ -16,4 +16,8 @@ public class Deportista {
         this.altura = altura;
         this.participaciones = new ArrayList<>();
     }
+
+    public Deportista(String nombre) {
+        this.nombre = nombre;
+    }
 }
